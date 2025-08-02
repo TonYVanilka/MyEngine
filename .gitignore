@@ -1,0 +1,19 @@
+# Visual Studio
+.vs/
+*.ipch
+*.db
+*.suo
+*.VC.db
+*.VC.VC.opendb
+
+# Сборка
+build/
+bin/
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.log
+
+build/
+out/

@@ -1,0 +1,33 @@
+#include "engine/Voxels/CunksManager.h"
+
+#include <iostream>
+
+void ChunksManager::GenerateChunks()
+{
+	for (int x = 0; x < WORLD_WIDTH; ++x)
+	for (int z = 0; z < WORLD_DEPTH; ++z) {
+		Chunk chunk(x, 0, z);
+		chunk.GenerateTerrain();
+		chunk.GenerateMesh();
+		chunk.IsChunkGenerated = true;
+		chunks[{x, z}] = std::move(chunk);
+		
+	}
+	//std::cout << "Generated " << chunks.size() << " chunks." << std::endl;
+
+}
+
+void ChunksManager::UploadAllMeshes()
+{
+	for (auto& [pos, chunk] : chunks) {
+		chunk.UploadMesh();
+	}
+}
+
+void ChunksManager::RenderAll(Shader& shader) {
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	for (auto& [pos, chunk] : chunks) {
+		chunk.Render(shader);
+	}
+}

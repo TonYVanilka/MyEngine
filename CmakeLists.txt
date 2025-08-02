@@ -1,0 +1,56 @@
+cmake_minimum_required(VERSION 3.15)
+
+project(ThirdLesonOpenGL)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_executable(ThirdLesonOpenGL
+    main.cpp
+    src/engine/ShaderProgram.cpp
+    src/engine/stb_image.cpp
+    src/engine/Window/Camera.cpp
+    src/engine/Mesh.cpp
+    src/engine/Voxels/Chunk.cpp
+    src/engine/Window/Window.cpp
+    src/engine/Window/Events.cpp
+    src/engine/Texture.cpp
+    src/engine/Voxels/ChunksManager.cpp
+)
+
+# GLAD
+add_library(glad STATIC external/glad/src/glad.c)
+target_include_directories(glad PUBLIC external/glad/include)
+
+target_link_libraries(ThirdLesonOpenGL PRIVATE glad)
+
+# GLFW
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(external/glfw)
+target_link_libraries(ThirdLesonOpenGL PRIVATE glfw)
+
+# OpenGL
+find_package(OpenGL REQUIRED)
+target_link_libraries(ThirdLesonOpenGL PRIVATE OpenGL::GL)
+
+# Glm
+target_include_directories(ThirdLesonOpenGL PRIVATE external/glm)
+
+target_include_directories(ThirdLesonOpenGL
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/external/glad/include
+        ${CMAKE_SOURCE_DIR}/external/glfw/include
+)
+
+add_custom_target(copy_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/assets
+            ${CMAKE_BINARY_DIR}/assets
+)
+
+add_dependencies(ThirdLesonOpenGL copy_assets)
