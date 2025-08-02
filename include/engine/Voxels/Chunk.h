@@ -13,7 +13,7 @@ class Chunk {
 
 public:
 	
-	static constexpr const uint8_t WIDTH = 16;
+	static constexpr const uint8_t WIDTH = 160;
 	static constexpr const uint8_t HEIGHT = WIDTH;
 	static constexpr const int DEPTH = WIDTH;
 	bool IsChunkGenerated = false;
