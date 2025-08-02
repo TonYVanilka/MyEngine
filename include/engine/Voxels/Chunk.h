@@ -12,17 +12,13 @@ class ChunksManager;
 class Chunk {
 
 public:
-	
-	static constexpr const uint8_t WIDTH = 160;
-	static constexpr const uint8_t HEIGHT = WIDTH;
-	static constexpr const int DEPTH = WIDTH;
+
+	glm::mat4 model = glm::mat4(1.0f);
 	bool IsChunkGenerated = false;
 
-	Chunk() : m_chunkX(0), m_chunkY(0), m_chunkZ(0), model(glm::mat4(1.0f)) {
-		memset(blocks, 0, sizeof(blocks));
-	}
+	Chunk() = default;
 
-	Chunk(int chunkX, int chunkY, int chunkZ);
+	Chunk(int x, int y, int z);
 
 	~Chunk() = default;
 
@@ -31,28 +27,28 @@ public:
 
 	void Render(Shader& shader) const;
 
-	uint8_t GetBlockPos(int x, int y, int z) const;
+	//void SetBlock(int x, int y, int z, uint8_t blockType);
 
-	void SetBlock(int x, int y, int z, uint8_t blockType);
-
-	void UploadMesh();
+	void UploadMeshData();
 
 private:
 
-	glm::mat4 model = glm::mat4(1.0f);
+	static constexpr const uint8_t CHUNK_X = 16;
+	static constexpr const uint8_t CHUNK_Y = 16;
+	static constexpr const uint8_t CHUNK_Z = 16;
 
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 
-	int m_chunkX, m_chunkY, m_chunkZ = 0;
-	uint8_t blocks[WIDTH][HEIGHT][DEPTH] = {};
+	uint32_t indexCount = 0;
 
+	uint8_t blocks[CHUNK_X][CHUNK_Y][CHUNK_Z] = {};
 	uint8_t blockUpdate[4][4][4] = {};
 
-	Mesh mesh;
+	Mesh c_mesh;
 
 	bool IsFaceVisible(int x, int y, int z, int face) const;
 
-	void AddFace(int x, int y, int z, int face, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint32_t indexOffset);
+	void GenFace(int x, int y, int z, int face, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint16_t indexOffset);
 
 };

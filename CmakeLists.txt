@@ -10,11 +10,11 @@ add_executable(ThirdLesonOpenGL
     src/engine/stb_image.cpp
     src/engine/Window/Camera.cpp
     src/engine/Mesh.cpp
-    src/engine/Voxels/Chunk.cpp
     src/engine/Window/Window.cpp
     src/engine/Window/Events.cpp
     src/engine/Texture.cpp
-    src/engine/Voxels/ChunksManager.cpp
+    src/engine/Voxels/Chunk.cpp
+    src/engine/Voxels/ChunkManager.cpp
 )
 
 # GLAD

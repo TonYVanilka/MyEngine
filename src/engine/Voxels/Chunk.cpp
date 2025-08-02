@@ -1,53 +1,78 @@
 #include "engine/Voxels/Chunk.h"
 
+#include "engine/Vertex.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <vector>
 #include <iostream>
 
-Chunk::Chunk(int chunkX, int chunkY, int chunkZ)
+Chunk::Chunk(int x, int y, int z)
 {
-	m_chunkX = chunkX;
-	m_chunkY = chunkY;
-	m_chunkZ = chunkZ;
-
-	model = glm::translate(glm::mat4(1.0f),
-	glm::vec3(m_chunkX * WIDTH, m_chunkY * HEIGHT, m_chunkZ * DEPTH));
-
+	model = glm::translate(glm::mat4(1.0f),	glm::vec3(x * CHUNK_X, y * CHUNK_Y, z * CHUNK_Z));
 }
 
 void Chunk::GenerateTerrain()
 {
-	for (int x = 0; x < WIDTH; ++x)
-	for (int y = 0; y < HEIGHT; ++y)
-	for (int z = 0; z < DEPTH; ++z) {
-		//if (x % 3 == 0 && y % 3 == 0 && z % 3 == 0) {
-		//	// Пример генерации: ставим блоки только на четных координатах
-		//	SetBlock(x, y, z, 1); // Например, блок типа 1
-		//} else {
-		//	// Пустой блок
-		//SetBlock(x, y, z, 0);
-		//}
-		SetBlock(x, y, z, 1);
-	}
+	for (int x = 0; x < CHUNK_X; ++x)
+	for (int y = 0; y < CHUNK_Y; ++y)
+	for (int z = 0; z < CHUNK_Z; ++z)
+	{
+		if ((x + y + z) % 2 == 0) {
+			// Set block type (1 for example)
+			// You can set different block types based on your needs
+			blocks[x][y][z] = 1; // Example: setting all blocks to type 1
+		} else {
+			// Set empty block (0)
+			blocks[x][y][z] = 0;
+		}
+		//blocks[x][y][z] = 1;
+	} 
 }
 
 void Chunk::GenerateMesh()
 {
-	for (int x = 0; x < WIDTH; ++x)
-	for (int y = 0; y < HEIGHT; ++y)
-	for (int z = 0; z < DEPTH; ++z) {
+	for (int x = 0; x < CHUNK_X; ++x)
+	for (int y = 0; y < CHUNK_Y; ++y)
+	for (int z = 0; z < CHUNK_Z; ++z)
+	{
 		uint8_t block = blocks[x][y][z];
 
-		if (block == 0) continue;
+		if (block == 0)
+			continue;
 
 		for (int face = 0; face < 6; ++face) {
 			if (IsFaceVisible(x, y, z, face)) {
-				AddFace(x, y, z, face, vertices, indices, static_cast<uint32_t>(vertices.size()));
+			GenFace(x, y, z, face, vertices, indices, static_cast<uint16_t>(vertices.size()));
 			}
 		}
 	}
-	//std::cout << "Chunk mesh generated with " << vertices.size() << " vertices and " << indices.size() << " indices." << std::endl;
+	//std::cout << "Vertices: " << vertices.size() << ", Indices: " << indices.size() << std::endl;
 }
 
-void Chunk::AddFace(int x, int y, int z, int face, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint32_t indexOffset)
+bool Chunk::IsFaceVisible(int x, int y, int z, int face) const
+{
+	int nx = x, ny = y, nz = z;
+
+	switch (face) {
+	case 0: nx += 1; break;
+	case 1: nx -= 1; break;
+	case 2: ny += 1; break;
+	case 3: ny -= 1; break;
+	case 4: nz += 1; break;
+	case 5: nz -= 1; break;
+	}
+
+	// if coord out chunk 
+
+	if (nx < 0 || nx >= CHUNK_X ||
+		ny < 0 || ny >= CHUNK_Y ||
+		nz < 0 || nz >= CHUNK_Z)
+		return true;
+
+	return blocks[nx][ny][nz] == 0;
+}
+
+void Chunk::GenFace(int x, int y, int z, int face, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint16_t indexOffset)
 {
 
 	static const glm::vec3 faceNormals[6] = {
@@ -88,55 +113,32 @@ void Chunk::AddFace(int x, int y, int z, int face, std::vector<Vertex>& vertices
 	indices.push_back(indexOffset + 2);
 	indices.push_back(indexOffset + 3);
 	indices.push_back(indexOffset + 0);
+
 }
 
-void Chunk::Render(Shader& shader) const {
+//void Chunk::UpdateBlock(uint8_t block[x][y][z])
+//{
+//	
+//}
+
+void Chunk::UploadMeshData()
+{
+	c_mesh.UploadData(vertices, indices);
+	IsChunkGenerated = true;
+	indexCount = indices.size();
+	vertices.clear();
+	indices.clear();
+	//std::cout << "Mesh data uploaded. Chunk generated: " << IsChunkGenerated << std::endl;
+}
+
+void Chunk::Render(Shader& shader) const
+{
 	if (!IsChunkGenerated) {
 		std::cerr << "Chunk not generated yet!" << std::endl;
 		return;
 	}
+
 	shader.setMat4("model", model);
-	mesh.Bind();
-	mesh.Draw(indices.size());
-}
-
-uint8_t Chunk::GetBlockPos(int x, int y, int z) const {
-	if (x < 0 || x >= WIDTH ||
-		y < 0 || y >= HEIGHT ||
-		z < 0 || z >= DEPTH)
-		return 0; // пусто
-
-	return blocks[x][y][z];
-}
-
-void Chunk::SetBlock(int x, int y, int z, uint8_t blockType)
-{
-	blocks[x][y][z] = blockType;
-}
-
-bool Chunk::IsFaceVisible(int x, int y, int z, int face) const {
-	int nx = x, ny = y, nz = z;
-
-	switch (face) {
-	case 0: nx += 1; break;
-	case 1: nx -= 1; break;
-	case 2: ny += 1; break;
-	case 3: ny -= 1; break;
-	case 4: nz += 1; break;
-	case 5: nz -= 1; break;
-	}
-
-	// Вне чанка — считаем пустым
-	if (nx < 0 || nx >= WIDTH ||
-		ny < 0 || ny >= HEIGHT ||
-		nz < 0 || nz >= DEPTH)
-		return true;
-
-	return GetBlockPos(nx, ny, nz) == 0;
-}
-
-void Chunk::UploadMesh() {
-
-	mesh.UploadData(vertices, indices);
-	//std::cout << "Mesh uploaded with " << vertices.size() << " vertices and " << indices.size() << " indices." << std::endl;
+	c_mesh.Bind();
+	c_mesh.Draw(indexCount);
 }
