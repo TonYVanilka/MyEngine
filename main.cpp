@@ -54,7 +54,8 @@ int main() {
 
 	ChunkManager chunkManager;
 
-	chunkManager.GenerateChunks();
+	chunkManager.GenerateTerrains();
+	chunkManager.GenerateMeshes();
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
     //glPointSize(5.0f);

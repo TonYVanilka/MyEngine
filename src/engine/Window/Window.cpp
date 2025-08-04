@@ -23,7 +23,10 @@ Window::Window(int SCR_WIDTH, int SCR_HEIGHT, const char* title) : camera(), eve
         std::cout << "Failed to initialize GLAD" << std::endl;
     }
 
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);     // включить буфер глубины
+    glEnable(GL_CULL_FACE);      // включить отсечение
+    glCullFace(GL_BACK);         // отсекаем задние
+    glFrontFace(GL_CW);         // треугольники против часовой Ч лицевые
 
     glfwSetWindowUserPointer(window, &events);
 

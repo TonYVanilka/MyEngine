@@ -11,15 +11,14 @@ public:
 
 	ChunkManager() = default;
 	~ChunkManager() = default;
-	void GenerateChunks();
+	void GenerateTerrains();
+	void GenerateMeshes();
 	void RenderChunks(Shader& shader) const;
 	void UpdateChunks();
 
-private:
-
 	struct ChunkCoordHash {
 		size_t operator()(const std::tuple<int, int, int>& key) const {
-			auto &[x, y, z] = key;
+			auto& [x, y, z] = key;
 			return std::hash<int>()(x) ^ (std::hash<int>()(y) << 1) ^ (std::hash<int>()(z) << 2);
 		}
 	};
@@ -27,8 +26,12 @@ private:
 	using ChunkCoord = std::tuple<int, int, int>;
 	std::unordered_map<ChunkCoord, Chunk, ChunkCoordHash> chunks;
 
-	int chunkCountX = 2;
+private:
+
+	int chunkCountX = 4;
 	int chunkCountY = 2;
-	int chunkCountZ = 2;
+	int chunkCountZ = 4;
+
+	uint8_t GetBlockAt(int gx, int gy, int gz) const;
 
 };

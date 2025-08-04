@@ -7,6 +7,7 @@
 #include <iostream>
 
 Chunk::Chunk(int x, int y, int z)
+	: chunkX(x), chunkY(y), chunkZ(z)
 {
 	model = glm::translate(glm::mat4(1.0f),	glm::vec3(x * CHUNK_X, y * CHUNK_Y, z * CHUNK_Z));
 }
@@ -17,19 +18,11 @@ void Chunk::GenerateTerrain()
 	for (int y = 0; y < CHUNK_Y; ++y)
 	for (int z = 0; z < CHUNK_Z; ++z)
 	{
-		if ((x + y + z) % 2 == 0) {
-			// Set block type (1 for example)
-			// You can set different block types based on your needs
-			blocks[x][y][z] = 1; // Example: setting all blocks to type 1
-		} else {
-			// Set empty block (0)
-			blocks[x][y][z] = 0;
-		}
-		//blocks[x][y][z] = 1;
+		blocks[x][y][z] = 1;
 	} 
 }
 
-void Chunk::GenerateMesh()
+void Chunk::GenerateMesh(std::function<uint8_t(int, int, int)> getBlockAt)
 {
 	for (int x = 0; x < CHUNK_X; ++x)
 	for (int y = 0; y < CHUNK_Y; ++y)
@@ -41,15 +34,15 @@ void Chunk::GenerateMesh()
 			continue;
 
 		for (int face = 0; face < 6; ++face) {
-			if (IsFaceVisible(x, y, z, face)) {
-			GenFace(x, y, z, face, vertices, indices, static_cast<uint16_t>(vertices.size()));
+			if (IsFaceVisible(x, y, z, face, getBlockAt)) {
+				GenFace(x, y, z, face, vertices, indices, static_cast<uint16_t>(vertices.size()));
 			}
 		}
 	}
 	//std::cout << "Vertices: " << vertices.size() << ", Indices: " << indices.size() << std::endl;
 }
 
-bool Chunk::IsFaceVisible(int x, int y, int z, int face) const
+bool Chunk::IsFaceVisible(int x, int y, int z, int face, std::function<uint8_t(int, int, int)> getBlockAt)
 {
 	int nx = x, ny = y, nz = z;
 
@@ -62,14 +55,12 @@ bool Chunk::IsFaceVisible(int x, int y, int z, int face) const
 	case 5: nz -= 1; break;
 	}
 
-	// if coord out chunk 
+	// Преобразуем локальные координаты в глобальные
+	int gx = chunkX * CHUNK_X + nx;
+	int gy = chunkY * CHUNK_Y + ny;
+	int gz = chunkZ * CHUNK_Z + nz;
 
-	if (nx < 0 || nx >= CHUNK_X ||
-		ny < 0 || ny >= CHUNK_Y ||
-		nz < 0 || nz >= CHUNK_Z)
-		return true;
-
-	return blocks[nx][ny][nz] == 0;
+	return getBlockAt(gx, gy, gz) == 0;
 }
 
 void Chunk::GenFace(int x, int y, int z, int face, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint16_t indexOffset)
@@ -84,13 +75,25 @@ void Chunk::GenFace(int x, int y, int z, int face, std::vector<Vertex>& vertices
 		{ 0,  0, -1}   // -Z
 	};
 	static const glm::vec3 faceVertices[6][4] = {
-		{ {1, 0, 1}, {1, 1, 1}, {1, 1, 0}, {1, 0, 0} }, // +X
-		{ {0, 0, 0}, {0, 1, 0}, {0, 1, 1}, {0, 0, 1} }, // -X
-		{ {0, 1, 1}, {0, 1, 0}, {1, 1, 0}, {1, 1, 1} }, // +Y
-		{ {0, 0, 0}, {1, 0, 0}, {1, 0, 1}, {0, 0, 1} }, // -Y
-		{ {0, 0, 1}, {1, 0, 1}, {1, 1, 1}, {0, 1, 1} }, // +Z
-		{ {1, 0, 0}, {0, 0, 0}, {0, 1, 0}, {1, 1, 0} }, // -Z
+		// +X (правая грань) - CW
+		{ {1, 0, 0}, {1, 0, 1}, {1, 1, 1}, {1, 1, 0} },
+
+		// -X (левая грань) - CW
+		{ {0, 0, 1}, {0, 0, 0}, {0, 1, 0}, {0, 1, 1} },
+
+		// +Y (верхняя грань) - CW
+		{ {0, 1, 0}, {1, 1, 0}, {1, 1, 1}, {0, 1, 1} },
+
+		// -Y (нижняя грань) - CW
+		{ {0, 0, 0}, {0, 0, 1}, {1, 0, 1}, {1, 0, 0} },
+
+		// +Z (задняя грань) - CW
+		{ {0, 0, 1}, {0, 1, 1}, {1, 1, 1}, {1, 0, 1} },
+
+		// -Z (передняя грань) - CW
+		{ {1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 0, 0} },
 	};
+
 	static const glm::vec2 texCoords[4] = {
 		{0.0f, 0.0f},
 		{1.0f, 0.0f},
@@ -110,9 +113,10 @@ void Chunk::GenFace(int x, int y, int z, int face, std::vector<Vertex>& vertices
 	indices.push_back(indexOffset + 0);
 	indices.push_back(indexOffset + 1);
 	indices.push_back(indexOffset + 2);
+
+	indices.push_back(indexOffset + 0);
 	indices.push_back(indexOffset + 2);
 	indices.push_back(indexOffset + 3);
-	indices.push_back(indexOffset + 0);
 
 }
 

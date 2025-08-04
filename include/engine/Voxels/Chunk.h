@@ -6,12 +6,19 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "engine/Mesh.h"
 #include "engine/ShaderProgram.h"
-
-class ChunksManager;
+#include <functional>
 
 class Chunk {
 
 public:
+
+	static constexpr const uint8_t CHUNK_X = 16;
+	static constexpr const uint8_t CHUNK_Y = 16;
+	static constexpr const uint8_t CHUNK_Z = 16;
+
+	int chunkX = 0, chunkY = 0, chunkZ = 0;
+
+	uint8_t blocks[CHUNK_X][CHUNK_Y][CHUNK_Z] = {};
 
 	glm::mat4 model = glm::mat4(1.0f);
 	bool IsChunkGenerated = false;
@@ -23,7 +30,7 @@ public:
 	~Chunk() = default;
 
 	void GenerateTerrain();
-	void GenerateMesh();
+	void GenerateMesh(std::function<uint8_t(int, int, int)> getBlockAt);
 
 	void Render(Shader& shader) const;
 
@@ -33,21 +40,16 @@ public:
 
 private:
 
-	static constexpr const uint8_t CHUNK_X = 16;
-	static constexpr const uint8_t CHUNK_Y = 16;
-	static constexpr const uint8_t CHUNK_Z = 16;
-
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 
 	uint32_t indexCount = 0;
 
-	uint8_t blocks[CHUNK_X][CHUNK_Y][CHUNK_Z] = {};
 	uint8_t blockUpdate[4][4][4] = {};
 
 	Mesh c_mesh;
 
-	bool IsFaceVisible(int x, int y, int z, int face) const;
+	bool IsFaceVisible(int x, int y, int z, int face, std::function<uint8_t(int, int, int)> getBlockAt);
 
 	void GenFace(int x, int y, int z, int face, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint16_t indexOffset);
 
