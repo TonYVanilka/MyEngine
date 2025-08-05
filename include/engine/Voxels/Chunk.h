@@ -51,6 +51,6 @@ private:
 
 	bool IsFaceVisible(int x, int y, int z, int face, std::function<uint8_t(int, int, int)> getBlockAt);
 
-	void GenFace(int x, int y, int z, int face, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint16_t indexOffset);
+	void GenFace(int x, int y, int z, int face, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint16_t indexOffset, uint8_t block);
 
 };

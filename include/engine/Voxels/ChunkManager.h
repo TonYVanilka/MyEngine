@@ -28,9 +28,9 @@ public:
 
 private:
 
-	int chunkCountX = 4;
+	int chunkCountX = 8;
 	int chunkCountY = 2;
-	int chunkCountZ = 4;
+	int chunkCountZ = 8;
 
 	uint8_t GetBlockAt(int gx, int gy, int gz) const;
 

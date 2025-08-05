@@ -20,7 +20,7 @@ public:
 private:
 
 	GLuint VAO = 0, VBO = 0, EBO = 0;
-	size_t vertexCount = 0;  // Количество вершин
-	bool usesIndices = false; // Используются ли индексы (EBO)
+	size_t vertexCount = 0; 
+	bool usesIndices = false; 
 
 };

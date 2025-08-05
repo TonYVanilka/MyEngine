@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <thread>
 
 #include "engine/ShaderProgram.h"
 //#include "engine/Mesh.h"
@@ -44,24 +45,20 @@ int main() {
 
     //create texture
 
-	Texture texture1("assets/textures/6504360218.jpg", true, 0);
-	Texture texture2("assets/textures/2972056458_preview_Pepe.png", true, 1);
+	Texture texture1("assets/textures/atlas.png", true, 0);
 
     ourShader.use();
 
-    ourShader.setInt("texture1", 0);
-    ourShader.setInt("texture2", 1);
+    ourShader.setInt("texture", 0);
 
 	ChunkManager chunkManager;
 
 	chunkManager.GenerateTerrains();
 	chunkManager.GenerateMeshes();
 
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-    //glPointSize(5.0f);
+    glm::vec3 lightDirection = glm::normalize(glm::vec3(0.5f, -1.0f, 0.5f)); // Пример: свет под углом
+    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); // Белый свет
 
-    // render loop
-    // -----------
     while (!glfwWindowShouldClose(window))
     {
 
@@ -76,6 +73,9 @@ int main() {
 
         ourShader.setMat4("view", view);
         ourShader.setMat4("projection", projection);
+
+        ourShader.setVec3("lightDir", lightDirection);
+        ourShader.setVec3("lightColor", lightColor);
         
         win.ProcessEvents();
     }

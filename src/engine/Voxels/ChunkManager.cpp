@@ -4,32 +4,31 @@
 
 void ChunkManager::GenerateTerrains()
 {
-	for (int x = 0; x < chunkCountX; ++x)
-	for (int z = 0; z < chunkCountZ; ++z)
+	for (int x = -chunkCountX / 2; x < chunkCountX / 2; ++x)
+	for (int y = -chunkCountY / 2; y < chunkCountY / 2; ++y)
+	for (int z = -chunkCountZ / 2; z < chunkCountZ / 2; ++z)
 	{
-
-		Chunk chunk(x, 0, z);
+		Chunk chunk(x, y, z);
 		chunk.GenerateTerrain();
 		//chunk.GenerateMesh();
-		chunks.emplace(std::make_tuple(x, 0, z), std::move(chunk));
+		chunks.emplace(std::make_tuple(x, y, z), std::move(chunk));
 		//chunks[{x, 0, z}].UploadMeshData();
 	}
 	std::cout << "Generated " << chunks.size() << " chunks." << std::endl;
 }
 
-// В ChunkManager.cpp
 uint8_t ChunkManager::GetBlockAt(int gx, int gy, int gz) const {
-	int chunkX = gx / 16;
-	int chunkY = gy / 16;
-	int chunkZ = gz / 16;
+	int chunkX = gx / Chunk::CHUNK_X;
+	int chunkY = gy / Chunk::CHUNK_Y;
+	int chunkZ = gz / Chunk::CHUNK_Z;
 
-	int localX = gx % 16;
-	int localY = gy % 16;
-	int localZ = gz % 16;
+	int localX = gx % Chunk::CHUNK_X;
+	int localY = gy % Chunk::CHUNK_Y;
+	int localZ = gz % Chunk::CHUNK_Z;
 
-	if (localX < 0) { chunkX--; localX += 16; }
-	if (localY < 0) { chunkY--; localY += 16; }
-	if (localZ < 0) { chunkZ--; localZ += 16; }
+	if (localX < 0) { chunkX--; localX += Chunk::CHUNK_X; }
+	if (localY < 0) { chunkY--; localY += Chunk::CHUNK_Y; }
+	if (localZ < 0) { chunkZ--; localZ += Chunk::CHUNK_Z; }
 
 	auto it = chunks.find({ chunkX, chunkY, chunkZ });
 	if (it == chunks.end()) return 0;
@@ -37,8 +36,7 @@ uint8_t ChunkManager::GetBlockAt(int gx, int gy, int gz) const {
 	return it->second.blocks[localX][localY][localZ];
 }
 
-
-void ChunkManager::GenerateMeshes() {  // Исправлено название
+void ChunkManager::GenerateMeshes() {
 	for (auto& [pos, chunk] : chunks) {
 		if (!chunk.blocks) {
 			std::cerr << "Error: borderBlocksAir is null!" << std::endl;

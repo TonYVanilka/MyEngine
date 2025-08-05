@@ -18,7 +18,13 @@ void Chunk::GenerateTerrain()
 	for (int y = 0; y < CHUNK_Y; ++y)
 	for (int z = 0; z < CHUNK_Z; ++z)
 	{
-		blocks[x][y][z] = 1;
+		int globalX = x + chunkX * CHUNK_X;
+		int globalY = y + chunkY * CHUNK_Y;
+		int globalZ = z + chunkZ * CHUNK_Z;
+		if (globalY >= ((sin(globalX * 0.1f) * 0.8f + 0.8f) * 10))
+			blocks[x][y][z] = 0;
+		else if (globalY >= ((sin(globalX * 0.1f) * 0.8f + 0.8f) * 10) / 2) blocks[x][y][z] = 2;
+		else blocks[x][y][z] = 1;
 	} 
 }
 
@@ -35,7 +41,7 @@ void Chunk::GenerateMesh(std::function<uint8_t(int, int, int)> getBlockAt)
 
 		for (int face = 0; face < 6; ++face) {
 			if (IsFaceVisible(x, y, z, face, getBlockAt)) {
-				GenFace(x, y, z, face, vertices, indices, static_cast<uint16_t>(vertices.size()));
+				GenFace(x, y, z, face, vertices, indices, static_cast<uint16_t>(vertices.size()), block);
 			}
 		}
 	}
@@ -55,7 +61,6 @@ bool Chunk::IsFaceVisible(int x, int y, int z, int face, std::function<uint8_t(i
 	case 5: nz -= 1; break;
 	}
 
-	// Преобразуем локальные координаты в глобальные
 	int gx = chunkX * CHUNK_X + nx;
 	int gy = chunkY * CHUNK_Y + ny;
 	int gz = chunkZ * CHUNK_Z + nz;
@@ -63,8 +68,9 @@ bool Chunk::IsFaceVisible(int x, int y, int z, int face, std::function<uint8_t(i
 	return getBlockAt(gx, gy, gz) == 0;
 }
 
-void Chunk::GenFace(int x, int y, int z, int face, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint16_t indexOffset)
+void Chunk::GenFace(int x, int y, int z, int face, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint16_t indexOffset, uint8_t block)
 {
+	const float TILE_SIZE = 1.0f / 16.0f; // Атлас 16x16
 
 	static const glm::vec3 faceNormals[6] = {
 		{ 1,  0,  0},  // +X
@@ -101,11 +107,18 @@ void Chunk::GenFace(int x, int y, int z, int face, std::vector<Vertex>& vertices
 		{0.0f, 1.0f},
 	};
 
+	int tileX = block % 16; 
+	int tileY = block / 16;
+	int flippedTileY = 15 - tileY;
+
 	for (int i = 0; i < 4; ++i) {
 		glm::vec3 pos = faceVertices[face][i] + glm::vec3(x, y, z);
 		Vertex v;
 		v.position = pos;
-		v.texCoords = texCoords[i];
+		v.texCoords = glm::vec2(
+			tileX * TILE_SIZE + texCoords[i].x * TILE_SIZE,
+			flippedTileY * TILE_SIZE + texCoords[i].y * TILE_SIZE
+		);
 		v.normal = faceNormals[face];
 		vertices.push_back(v);
 	}
